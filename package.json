@@ -1,0 +1,23 @@
+{
+  "name": "foxcloud",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "desktop-screenshot": "^0.1.1",
+    "express": "^4.17.1",
+    "hbs": "^4.1.1",
+    "ngrok": "^3.4.0",
+    "request": "^2.88.2",
+    "robotjs": "^0.6.0",
+    "screenshot-desktop": "^1.12.3",
+    "sleep": "^6.3.0",
+    "socket.io": "^3.1.0"
+  }
+}

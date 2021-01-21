@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream</title>
+</head>
+<body>
+    <div id="main">
+        <div class="stream" id="stream">
+            <img id="image" width="768" height="288">
+        </div>
+
+        <div class="controls">
+            <div class="leftClick">
+                <form action="/leftClick" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="leftClick">
+                </form>
+            </div>
+            <div class="rightClick">
+                <form action="/rightClick" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="rightClick">
+                </form>
+            </div>
+
+            <div class="lookUp">
+                <form action="/look" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="^" name="direction">
+                </form>
+                <form action="/look" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="s" name="direction">
+                </form>
+                <form action="/look" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="<" name="direction">
+                </form>
+                <form action="/look" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value=">" name="direction">
+                </form>
+            </div>
+
+            <div class="LeftDown">
+                <form action="/leftDown" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="leftDown">
+                </form>
+            </div>
+            <div class="LeftUp">
+                <form action="/leftUp" method="post" target="_self" rel="nofollow" onsubmit="return;">
+                    <input type="submit" value="right">
+                </form>
+            </div>
+        </div>
+    </div>
+    <textarea name="" id="" cols="30" rows="10" onchange="value=''"></textarea>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js" integrity="sha512-+l9L4lMTFNy3dEglQpprf7jQBhQsQ3/WvOnjaN/+/L4i0jOstgScV0q2TjfvRF4V+ZePMDuZYIQtg5T4MKr+MQ==" crossorigin="anonymous"></script>
+<script>
+    const socket = io.connect();
+    let stream = document.getElementById('image');
+    let main = document.getElementById('main');
+
+    // Keyboard input
+    main,addEventListener('keydown', e => {
+        socket.emit('keyDown', e.key);
+    });
+    main,addEventListener('keyup', e => {
+        socket.emit('keyUp', e.key);
+    });
+
+    // Position
+    stream.addEventListener('mousemove', e => {
+        let data = [e.clientX, e.clientY]
+        socket.emit('position', { x: data[0], y: data[1] });
+    });
+
+    // Left Click
+    stream.addEventListener('click', e => {
+        socket.emit('click', 0);
+    });
+
+    // Right Click
+    stream.addEventListener('contextmenu', e => {
+        socket.emit('rightclick', 0);
+    });
+
+    // Left Down
+    stream.addEventListener('mousedown', e => {
+        socket.emit('leftdown', 0);
+    });
+
+    // Left Up
+    stream.addEventListener('mouseup', e => {
+        socket.emit('leftup', 0);
+    });
+
+    socket.on('image', (data) => {
+        let image = document.getElementById('image');
+        image.src = `data:image/png;base64,${data}`
+    });
+</script>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #EFF7CF;
+        font-family: PT Sans;
+    }
+</style>
+
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crocodile</title>
+</head>
+<body>
+    <div class="canv">
+        {{!-- Main game canvas --}}
+        <canvas id="canv" width="1400" height="288" class="canvas" oncontextmenu="return false"></canvas>
+    </div>
+    
+    <div class="nowdrawing" id="nowdrawing">
+        {{!-- How draw right now and his theme --}}
+    </div>
+
+    <div class="chat">
+        {{!-- Users chat --}}
+        <div id="form">
+            <form action="/postcomment" method="post" onsubmit="return 0">
+                <div class="flex">
+                    <input type="text" name="comment" id="comm" autocomplete="off">
+                    <input type="text" name="nickname" class="hidden" id="namefield">
+                    <input type="submit" value="Отправить">
+                </div>
+            </form>
+        </div>
+        <div class="box" id="box">
+            {{!-- Here goes messages from players --}}
+        </div>
+    </div>
+</body>
+{{!-- Soket.io library --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js" integrity="sha512-+l9L4lMTFNy3dEglQpprf7jQBhQsQ3/WvOnjaN/+/L4i0jOstgScV0q2TjfvRF4V+ZePMDuZYIQtg5T4MKr+MQ==" crossorigin="anonymous"></script>
+{{!-- Custom JS --}}
+<script>
+    // Defining variables
+    let socket = io.connect();
+    let main = document.getElementById('main');
+    let canvas = document.getElementById('canv');
+    let chat = document.getElementById('box');
+    let form = document.getElementById('form');
+    let comment = document.getElementById('comm');
+    let nd = document.getElementById('nowdrawing');
+    let namefield = document.getElementById('namefield');
+    let rectSize = 5;
+    let fill = false;
+    let ctx = canvas.getContext('2d');
+    let isDrawing;
+
+    // Set name list
+    let names = ['Horny', 'Dick', 'LoveDicks', 'Sucking', 'Cumming', 'YourClubBoddy', 'GachiBoy', 'LoveFisting', 'LoveAnal']
+    let name = '';
+    let num = Math.floor(Math.random() * names.length);
+    let id = Math.floor(Math.random() * 10000);
+    // Set current name
+    name = names[num];
+    let data = {
+        "name": name,
+        "id": id
+    }
+    // Emmit name to server
+    socket.emit('setname', data);
+    namefield.value = name;
+
+    // Update Name If Exist
+    socket.on('changeName', (data) => {
+        if (id == data.id) {
+            name = data.name;
+            namefield.value = data.name;
+        } else {
+            namefield.value = name;
+        }
+    });
+
+    // Post Comment
+    socket.on('comment', (data) => {
+        let child = document.createElement("div");
+        child.innerHTML = "<div class=\"message\"><hr><p>" + data.name + "</p><p>" + data.comment + "</p><hr></div>"
+        chat.append(child);
+        if (chat.firstChild) {
+            chat.insertBefore(child, chat.firstChild);
+        }
+        comment.value = '';
+        socket.emit('comment', data.comment);
+    });
+
+    // Update Canvas
+    socket.on('draw', (data) => {
+        let image = new Image();
+        image.src = data;
+        ctx.drawImage(image, 0, 0);
+    });
+
+    // New drawer cames here
+    socket.on('changeDrawer', (data) => {
+        console.log(data, name)
+        if (name == data.drawer) {
+            isDrawing = true;
+            nd.innerHTML = "<hr>Now Drawing: You<hr><p>" + data.theme + "</p>"
+        } else {
+            isDrawing = false;
+            nd.innerHTML = "<hr>Now Drawing: " + data.drawer + "<hr>"
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Check how currently draw
+    socket.on('amIDraw', (data) => {
+        if (name == data) {
+            form.style.setProperty("display", "none");
+        } else {
+            form.style.setProperty("display", "inherit");
+        }
+    });
+
+    //On Win action
+    socket.on('win', (data) => {
+        chat.innerHTML = "";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Draw functions
+    canvas.addEventListener('mousedown', ev => {
+        if (ev.which == 3) {
+            ctx.fillStyle = '#EFF7CF';
+        } else if (ev.which == 1) {
+            ctx.fillStyle = '#111111';
+        }
+        fill = true;
+    })
+
+    canvas.addEventListener('mouseup', ev => {
+        fill = false;
+    })
+
+    canvas.addEventListener('mouseout', ev => {
+        fill = false;
+    })
+
+    canvas.addEventListener('mousemove', e => {
+        if (fill) {
+            if (isDrawing) {
+                ctx.fillRect(e.clientX - 2, e.clientY - 5, rectSize, rectSize);
+            }
+        }
+    })
+
+    canvas.addEventListener('mousemove', e => {
+        setTimeout(() => {
+            let imgdata = canvas.toDataURL();
+            socket.emit('image', imgdata);
+        }, 1000)
+    })
+
+</script>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #EFF7CF;
+        font-family: sans-serif;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .nowdrawing {
+        text-align: center;
+    }
+
+    .canvas {
+        border-radius: 2%;
+        border-color: black;
+        border: solid;
+        cursor: crosshair;
+    }
+
+    .box {
+        margin: 5%;
+        border-radius: 2%;
+        border-color: black;
+        border: solid;
+        width: 90%;
+        height: 90%;
+    }
+
+    .message {
+        margin: 5%;
+    }
+
+    .chat {
+        text-align: center;
+    }
+</style>
+
+</html>
